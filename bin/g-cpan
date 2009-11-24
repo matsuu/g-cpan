@@ -754,7 +754,7 @@ HERE
                             copy($gcpan_run->{cpan}{lc($original_ebuild)}{cpan_tarball}, $gcpan_run->{sources});
                         }
                         print_info("Ebuild generated for $ebuild_wanted");
-                        $gcpan_run->generate_digest($ebuild);
+                        $gcpan_run->generate_manifest($ebuild);
                         if (
                             !$upgrade
                             || ($upgrade

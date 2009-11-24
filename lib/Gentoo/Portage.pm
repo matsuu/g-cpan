@@ -33,7 +33,7 @@ require Exporter;
 our @ISA = qw(Exporter Gentoo);
 
 our @EXPORT =
-  qw( getEnv getAltName getAvailableEbuilds getAvailableVersions generate_digest emerge_ebuild import_fields );
+  qw( getEnv getAltName getAvailableEbuilds getAvailableVersions generate_digest generate_manifest emerge_ebuild import_fields );
 
 our $VERSION = '0.01';
 
@@ -291,6 +291,14 @@ sub generate_digest {
     system( "ebuild", $ebuild, "digest" );
 }
 
+sub generate_manifest {
+    my $self = shift;
+
+    # Full path to the ebuild file in question
+    my $ebuild = shift;
+    system( "ebuild", $ebuild, "manifest" );
+}
+
 sub read_ebuild {
     my $self = shift;
     my ($find_ebuild,$portdir,$tc,$tp,$file) = @_;
@@ -382,6 +390,10 @@ related syntax.
 =item $obj->generate_digest($path_to_ebuild)
 
 Given the full path to an ebuild, generate a digest via C<ebuild PKG digest>
+
+=item $obj->generate_manifest($path_to_ebuild)
+
+Given the full path to an ebuild, generate a manifest via C<ebuild PKG manifest>
 
 =item $obj->emerge_ebuild($pkg, @flags)
 
