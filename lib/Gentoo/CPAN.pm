@@ -150,6 +150,8 @@ sub unpackModule {
         $module_name =~ s{-}{::}xmsg;
     }    # Assume they gave us module-name instead of module::name
 
+    return ($self) if exists $self->{'cpan'}{ lc($module_name) }{'extracted'};
+
     my $obj = CPAN::Shell->expandany($module_name);
     unless ( ( ref $obj eq "CPAN::Module" )
         || ( ref $obj eq "CPAN::Bundle" )
@@ -224,6 +226,8 @@ sub unpackModule {
             $self->{'cpan'}{ lc($module_name) }{'depends'}{$dep} = "0";
         }
     }
+
+    $self->{'cpan'}{ lc($module_name) }{'extracted'} = 1;
     return ($self);
 }
 
