@@ -553,7 +553,7 @@ sub makeCPANstub {
   'tar' => q[$tar_prog],
   'term_is_latin' => q[1],
   'unzip' => q[$unzip_prog],
-  'urllist' => [qw["http://search.cpan.org/CPAN" "http://www.cpan.org/pub/CPAN" ],],
+  'urllist' => [qw[http://search.cpan.org/CPAN http://www.cpan.org/pub/CPAN],],
   'wget' => q[$wget_prog],
 };
 1;
