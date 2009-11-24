@@ -150,7 +150,7 @@ s/^([a-zA-Z0-9\-_\/\+]*)-([0-9\.]+[a-zA-Z]?)([\-r|\-rc|_alpha|_beta|_pre|_p]?)/$
 
 sub getBestVersion {
     my $self = shift;
-    my ( $find_ebuild, $portdir, $tc, $tp ) = @_;
+    my ( $portdir, $tc, $tp ) = @_;
      getAvailableEbuilds( $self, $portdir, $tc . "/" . $tp );
 
                 foreach ( @{ $self->{packagelist} } ) {
@@ -159,27 +159,27 @@ sub getBestVersion {
 
                     # - get highest version >
                     if ( $#tmp_availableVersions > -1 ) {
-                        $self->{'portage'}{ lc($find_ebuild) }{'version'} =
+                        $self->{'portage'}{ lc($tp) }{'version'} =
                           ( sort(@tmp_availableVersions) )
                           [$#tmp_availableVersions];
 
-                        read_ebuild($self,$find_ebuild,$portdir,$tc,$tp,$_);
+                        read_ebuild($self,$portdir,$tc,$tp,$_);
                         # - get rid of -rX >
-                        $self->{'portage'}{ lc($find_ebuild) }{'version'} =~
+                        $self->{'portage'}{ lc($tp) }{'version'} =~
                           s/([a-zA-Z0-9\-_\/]+)-r[0-9+]/$1/;
-                        $self->{'portage'}{ lc($find_ebuild) }{'version'} =~
+                        $self->{'portage'}{ lc($tp) }{'version'} =~
                           s/([a-zA-Z0-9\-_\/]+)-rc[0-9+]/$1/;
-                        $self->{'portage'}{ lc($find_ebuild) }{'version'} =~
+                        $self->{'portage'}{ lc($tp) }{'version'} =~
                           s/([a-zA-Z0-9\-_\/]+)_p[0-9+]/$1/;
-                        $self->{'portage'}{ lc($find_ebuild) }{'version'} =~
+                        $self->{'portage'}{ lc($tp) }{'version'} =~
                           s/([a-zA-Z0-9\-_\/]+)_pre[0-9+]/$1/;
 
                         # - get rid of other stuff we don't want >
-                        $self->{'portage'}{ lc($find_ebuild) }{'version'} =~
+                        $self->{'portage'}{ lc($tp) }{'version'} =~
                           s/([a-zA-Z0-9\-_\/]+)_alpha[0-9+]?/$1/;
-                        $self->{'portage'}{ lc($find_ebuild) }{'version'} =~
+                        $self->{'portage'}{ lc($tp) }{'version'} =~
                           s/([a-zA-Z0-9\-_\/]+)_beta[0-9+]?/$1/;
-                        $self->{'portage'}{ lc($find_ebuild) }{'version'} =~
+                        $self->{'portage'}{ lc($tp) }{'version'} =~
                           s/[a-zA-Z]+$//;
 
                         if ( $tc eq "perl-core"
@@ -192,9 +192,9 @@ sub getBestVersion {
                             {
                                 if ( -d $portage_root ) {
                                     if ( -d "$portage_root/virtual/perl-$tp" ) {
-                                        $self->{'portage'}{ lc($find_ebuild) }
+                                        $self->{'portage'}{ lc($tp) }
                                           {'name'} = "perl-$tp";
-                                        $self->{'portage'}{ lc($find_ebuild) }
+                                        $self->{'portage'}{ lc($tp) }
                                           {'category'} = "virtual";
                                         last;
                                     }
@@ -203,9 +203,9 @@ sub getBestVersion {
 
                         }
                         else {
-                            $self->{'portage'}{ lc($find_ebuild) }{'name'} =
+                            $self->{'portage'}{ lc($tp) }{'name'} =
                               $tp;
-                            $self->{'portage'}{ lc($find_ebuild) }{'category'} =
+                            $self->{'portage'}{ lc($tp) }{'category'} =
                               $tc;
                         }
 
@@ -216,7 +216,7 @@ sub getAvailableVersions {
     my $self        = shift;
     my $portdir     = shift;
     my $find_ebuild = shift;
-    return if ($find_ebuild =~ m{::} );
+    return if (defined $find_ebuild && $find_ebuild =~ m{::} );
     my %excludeDirs = (
         "."         => 1,
         ".."        => 1,
@@ -233,8 +233,8 @@ sub getAvailableVersions {
     }
     while (<DATA>) {
         my ($cat,$eb,$cpan_file) = split(/\s+|\t+/, $_);
-        if ( $cpan_file =~ m{^$find_ebuild$}i ) {
-            getBestVersion($self,$find_ebuild,$portdir,$cat,$eb);
+        if (defined $find_ebuild && $cpan_file =~ m{^$find_ebuild$}i ) {
+            getBestVersion($self,$portdir,$cat,$eb);
             $self->{portage}{ lc($find_ebuild) }{'found'}	 = 1;
             $self->{portage}{ lc($find_ebuild) }{'category'} = $cat;
             $self->{portage}{ lc($find_ebuild) }{'name'}	 = $eb;
@@ -242,7 +242,7 @@ sub getAvailableVersions {
         }
     }
 
-    unless(defined($self->{'portage'}{lc($find_ebuild)}{'name'})) {
+    unless(defined $find_ebuild && defined($self->{'portage'}{lc($find_ebuild)}{'name'})) {
     
     foreach my $tc ( @{ $self->{portage_categories} } ) {
         next if ( !-d "$portdir/$tc" );
@@ -268,7 +268,7 @@ sub getAvailableVersions {
                     next
                       unless ( lc($find_ebuild) eq lc($tp) );
                 }
-                getBestVersion($self,$find_ebuild,$portdir,$tc,$tp);
+                getBestVersion($self,$portdir,$tc,$tp);
             } #Ends here
         }
     }
@@ -301,7 +301,7 @@ sub generate_manifest {
 
 sub read_ebuild {
     my $self = shift;
-    my ($find_ebuild,$portdir,$tc,$tp,$file) = @_;
+    my ($portdir,$tc,$tp,$file) = @_;
     my $e_file = "$portdir/$tc/$tp/$file";
      # Grab some info for display
                         my $e_import = Shell::EnvImporter->new(
@@ -313,8 +313,8 @@ sub read_ebuild {
                         $e_import->shellobj->envcmd('set');
                         $e_import->run();
                         $e_import->env_import();
-                        $self->{'portage'}{lc($find_ebuild)}{'DESCRIPTION'} = strip_env($ENV{DESCRIPTION});
-                        $self->{'portage'}{lc($find_ebuild)}{'HOMEPAGE'} = strip_env($ENV{HOMEPAGE});
+                        $self->{'portage'}{lc($tp)}{'DESCRIPTION'} = strip_env($ENV{DESCRIPTION});
+                        $self->{'portage'}{lc($tp)}{'HOMEPAGE'} = strip_env($ENV{HOMEPAGE});
                         $e_import->restore_env;
 
                     }
