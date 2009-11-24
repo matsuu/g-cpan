@@ -231,6 +231,7 @@ sub getAvailableVersions {
     if ($find_ebuild) {
         return if ( defined($self->{portage}{ lc($find_ebuild) }{'found'} ));
     }
+    my $data_pos = tell(DATA);
     while (<DATA>) {
         my ($cat,$eb,$cpan_file) = split(/\s+|\t+/, $_);
         if (defined $find_ebuild && $cpan_file =~ m{^$find_ebuild$}i ) {
@@ -238,9 +239,11 @@ sub getAvailableVersions {
             $self->{portage}{ lc($find_ebuild) }{'found'}	 = 1;
             $self->{portage}{ lc($find_ebuild) }{'category'} = $cat;
             $self->{portage}{ lc($find_ebuild) }{'name'}	 = $eb;
-           return;
+            seek(DATA,$data_pos,0);
+            return;
         }
     }
+    seek(DATA,$data_pos,0);
 
     unless(defined $find_ebuild && defined($self->{'portage'}{lc($find_ebuild)}{'name'})) {
     
